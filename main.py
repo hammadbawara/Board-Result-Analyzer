@@ -28,11 +28,12 @@ def create_text_file():
     print(colored("EXTRACTING TEXT FROM PDF ..........", "green"))
 
     institute_code = None
+    institute_name = None
 
     # Initializing database
     sql = sqlite3.connect(DB_FILE_NAME)
     cursor = sql.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS result(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, roll_num INTEGER, marks INTEGER, institute INETEGER)")
+    cursor.execute("CREATE TABLE IF NOT EXISTS result(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, roll_num INTEGER, marks INTEGER, institute INETEGER, institute_name TEXT)")
     cursor.execute("CREATE TABLE IF NOT EXISTS schools(id INTEGER PRIMARY KEY AUTOINCREMENT, school_code INTEGER, school_name)")
 
     for i in tqdm(range(number_of_pages)):
@@ -56,8 +57,8 @@ def create_text_file():
                             marks = int(result[4])
                         except:
                             pass
-                        cursor.execute("INSERT INTO result(name, roll_num, marks, institute) VALUES(?,?,?,?)", 
-                        (result[2], result[1], marks, int(institute_code)))
+                        cursor.execute("INSERT INTO result(name, roll_num, marks, institute, institute_name) VALUES(?,?,?,?,?)", 
+                        (result[2], result[1], marks, int(institute_code), institute_name))
                 else:
                     # Saving into database
                     result = re.split(student_result_split_pattern, line)
@@ -67,14 +68,14 @@ def create_text_file():
                     except:
                         pass
                         
-                    cursor.execute("INSERT INTO result(name, roll_num, marks, institute) VALUES(?,?,?,?)", 
-                    (result[2], result[1], marks, institute_code))
+                    cursor.execute("INSERT INTO result(name, roll_num, marks, institute, institute_name) VALUES(?,?,?,?,?)", 
+                    (result[2], result[1], marks, institute_code, institute_name))
                     
             elif re.match(institute_name_pattern, line):
                 position = line.find("-")
                 institute_code = int(line[:position])
-                institude_name = line[position+1:]
-                cursor.execute("INSERT INTO schools(school_code, school_name) VALUES(?,?)",(institute_code, institude_name))            
+                institute_name = line[position+1:]
+                cursor.execute("INSERT INTO schools(school_code, school_name) VALUES(?,?)",(institute_code, institute_name))            
 
     # Commiting changes in database 
     sql.commit()
