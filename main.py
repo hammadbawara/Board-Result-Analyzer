@@ -32,7 +32,7 @@ def create_text_file():
     # Initializing database
     sql = sqlite3.connect(DB_FILE_NAME)
     cursor = sql.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS result(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, roll_num INTEGER, marks TEXT, institute INETEGER)")
+    cursor.execute("CREATE TABLE IF NOT EXISTS result(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, roll_num INTEGER, marks INTEGER, institute INETEGER)")
     cursor.execute("CREATE TABLE IF NOT EXISTS schools(id INTEGER PRIMARY KEY AUTOINCREMENT, school_code INTEGER, school_name)")
 
     for i in tqdm(range(number_of_pages)):
@@ -52,14 +52,23 @@ def create_text_file():
                     for student in two_students:
                         # saving into database
                         result = re.split(student_result_split_pattern, student)
+                        try:
+                            marks = int(result[4])
+                        except:
+                            pass
                         cursor.execute("INSERT INTO result(name, roll_num, marks, institute) VALUES(?,?,?,?)", 
-                        (result[2], result[1], result[4], int(institute_code)))
+                        (result[2], result[1], marks, int(institute_code)))
                 else:
                     # Saving into database
                     result = re.split(student_result_split_pattern, line)
-                    student = {"name":result[2], "roll num": result[1], "marks": result[4]}
+                    marks = -1
+                    try:
+                        marks = int(result[4])
+                    except:
+                        pass
+                        
                     cursor.execute("INSERT INTO result(name, roll_num, marks, institute) VALUES(?,?,?,?)", 
-                    (result[2], result[1], result[4], institute_code))
+                    (result[2], result[1], marks, institute_code))
                     
             elif re.match(institute_name_pattern, line):
                 position = line.find("-")
