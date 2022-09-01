@@ -1,13 +1,14 @@
 # importing required modules
 import os
 import re
-import json
+
 import PyPDF2
 from termcolor import colored
 from tqdm import tqdm
 
 PDF_FILE_NAME = "MA2022 GAZETTE.pdf"
 TEXT_FILE_NAME = f'{PDF_FILE_NAME}.txt'
+INSTITUTES_LIST_FILE = f'{PDF_FILE_NAME}-Institutes-List.txt'
 
 
 def create_text_file():
@@ -19,12 +20,16 @@ def create_text_file():
     number_of_pages = pdfReader.numPages
 
     student_result_pattern = "[0-9]{6} +[A-Z ]+[-]* [A-Z0-9,]*"
+    student_result_split_pattern = "([0-9]{6})([A-Z\s]*)([-]*)"
     institute_name_pattern = "[0-9]{6}-[A-Z., ()-]*"
 
     with open(TEXT_FILE_NAME, "w") as f:
         f.write("")
+    with open(INSTITUTES_LIST_FILE, "w") as f:
+        f.write("")
 
     text_file = open(TEXT_FILE_NAME, "a")
+    institutes_text_file = open(INSTITUTES_LIST_FILE, "a")
 
     print(colored("EXTRACTING TEXT FROM PDF ..........", "green"))
 
@@ -40,11 +45,14 @@ def create_text_file():
                 if i == 41:
                     two_students = re.findall(student_result_pattern, line)
                     for student in two_students:
-                        text_file.write(f'{student}\n')
+                        result = re.split(student_result_split_pattern, student)
+                        text_file.write(f'{result[1]}\t\t{result[2]}\t\t{result[4]}\n')
                 else:
-                    text_file.write(f'{i} - {line}\n')
+                    result = re.split(student_result_split_pattern, line)
+                    text_file.write(f'{result[1]}\t\t{result[2]}\t\t{result[4]}\n')
             elif re.match(institute_name_pattern, line):
                 text_file.write(f'\n\n{line}\n')
+                institutes_text_file.write(f'{line}\n')
 
     # closing the pdf file object
     pdfFileObj.close()
