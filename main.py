@@ -6,11 +6,15 @@ from termcolor import colored
 from tqdm import tqdm
 import sqlite3
 
-PDF_FILE_PATH = None
+# -------------------- Global Variables ---------------------
+
+PDF_FILE_PATH = '/home/hammad/Downloads/GazetteInterAnnual2022.pdf'
 DB_FILE_PATH = None
 DB_FOLDER_NAME = "EXTRACTED DATA"
 
-def create_text_file():
+# -----------------------------------------------------------
+
+def extract_data_from_pdf():
 
     json_data = {}
 
@@ -80,8 +84,8 @@ def create_text_file():
                 position = line.find("-")
                 institute_code = int(line[:position])
                 institute_name = line[position+1:]
-                cursor.execute("INSERT INTO schools(school_code, school_name) VALUES(?,?)",(institute_code, institute_name))            
-
+                cursor.execute("INSERT INTO schools(school_code, school_name) VALUES(?,?)",(institute_code, institute_name))      
+            
     # Commiting changes in database 
     sql.commit()
     cursor.close()
@@ -90,9 +94,7 @@ def create_text_file():
     # closing the pdf file object
     pdfFileObj.close()
 
-
-if __name__ == '__main__':
-
+def get_pdf_file_path():
     # Getting file path from user
     print("( -- Enter path of gazzete pdf you downloaded from " + colored("https://bisegrw.edu.pk", "blue") + " -- )\n")
     while True:
@@ -103,16 +105,48 @@ if __name__ == '__main__':
         PDF_FILE_PATH = PDF_FILE_PATH.replace("\"", "")
         PDF_FILE_PATH = PDF_FILE_PATH.replace("\\", "/")
         if os.path.isfile(PDF_FILE_PATH):
-            DB_FILE_PATH = f'{DB_FOLDER_NAME}/{PDF_FILE_PATH.split("/")[-1]}.db'
             break
         else:
             print(colored(f"'{DB_FILE_PATH}' file not found."))
+
+    
+
+
+if __name__ == '__main__':
+
+    # If file path is already given in code. Then don't ask for path
+    if PDF_FILE_PATH == None:
+        get_pdf_file_path()
+    else:
+        if not os.path.isfile(PDF_FILE_PATH):
+            print(colored('The file path you given is not valid path', 'red'))
+            exit()
+
+    # Path of database file
+    DB_FILE_PATH = f'{DB_FOLDER_NAME}/{PDF_FILE_PATH.split("/")[-1]}.db'
 
     # creating directory if not exisits
     if not os.path.isdir(DB_FOLDER_NAME):
         os.mkdir(DB_FOLDER_NAME)
     
-    if not os.path.isfile(DB_FILE_PATH):
-        create_text_file()
-    else:
-        print(colored("DB for this file already exists"), "green")
+    # If db file already exists then ask to delete old and make new or cancel
+    if os.path.isfile(DB_FILE_PATH):
+        print('DB File already exists.\n' + 
+            colored('Old DB file will be deleted\n\n', 'red') + 
+            'Do you still want to continue? (y/N):', end='')
+        response = input()
+        if not response in ['y', 'Y', "yes", 'Yes']:
+            print('Exiting from program...')
+            exit()
+        try:
+            os.remove(DB_FILE_PATH)
+        except:
+            print(colored("Something went wrong DB file not deleted.", 'red'))
+            exit()
+
+    try:
+        extract_data_from_pdf()
+    except Exception as e:
+        print('EXCEPTION: ', e)
+        print(f"{colored('[Program Stopped]', 'red')}\n Deleting DB File")
+        os.remove(DB_FILE_PATH)
