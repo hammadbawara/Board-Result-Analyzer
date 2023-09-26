@@ -8,7 +8,7 @@ import sqlite3
 
 # -------------------- Global Variables ---------------------
 
-PDF_FILE_PATH = '/home/hammad/Downloads/GazetteInterAnnual2022.pdf'
+PDF_FILE_PATH = 'gazette9th23.pdf'
 DB_FILE_PATH = None
 DB_FOLDER_NAME = "EXTRACTED DATA"
 
@@ -23,11 +23,11 @@ def extract_data_from_pdf():
 
     # creating a pdf reader object
     try:
-        pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
+        pdfReader = PyPDF2.PdfReader(pdfFileObj)
     except:
         print(colored(f"'{PDF_FILE_PATH}' FILE READING ERROR. PLEASE CHECK FILE", "red"))
         exit()
-    number_of_pages = pdfReader.numPages
+    number_of_pages = len(pdfReader.pages)
 
     student_result_pattern = "[0-9]{6} +[A-Z ]+[-]* [A-Z0-9,]*"
     student_result_split_pattern = "([0-9]{6})([A-Z\s]*)([-]*)"
@@ -46,8 +46,8 @@ def extract_data_from_pdf():
     cursor.execute("CREATE TABLE IF NOT EXISTS schools(id INTEGER PRIMARY KEY AUTOINCREMENT, school_code INTEGER, school_name)")
 
     for i in tqdm(range(number_of_pages)):
-        pageObj = pdfReader.getPage(i)
-        page_text = pageObj.extractText()
+        pageObj = pdfReader.pages[i]
+        page_text = pageObj.extract_text()
 
         # creating lines list
         page_text_lines = page_text.split("\n")
